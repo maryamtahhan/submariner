@@ -33,7 +33,6 @@ type SubmarinerEndpoint struct {
 
 type SubmarinerSpecification struct {
 	ClusterCidr                   []string
-	ColorCodes                    []string
 	GlobalCidr                    []string
 	ServiceCidr                   []string
 	Broker                        string
@@ -45,6 +44,7 @@ type SubmarinerSpecification struct {
 	Debug                         bool
 	NATEnabled                    bool
 	HealthCheckEnabled            bool `default:"true"`
+	Uninstall                     bool
 	HealthCheckInterval           uint
 	HealthCheckMaxPacketLossCount uint
 }

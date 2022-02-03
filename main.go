@@ -127,6 +127,12 @@ func main() {
 	natDiscovery, err := natdiscovery.New(localEndpoint)
 	fatalOnErr(err, "Error creating the NAT discovery handler")
 
+	if submSpec.Uninstall {
+		klog.Info("Uninstalling the submariner gateway engine")
+		// TODO
+		return
+	}
+
 	cableEngine.SetupNATDiscovery(natDiscovery)
 
 	fatalOnErr(natDiscovery.Run(stopCh), "Error starting NAT discovery server")
@@ -171,7 +177,7 @@ func main() {
 		dsSyncer := datastoresyncer.New(&broker.SyncerConfig{
 			LocalRestConfig: cfg,
 			LocalNamespace:  submSpec.Namespace,
-		}, localCluster, localEndpoint, submSpec.ColorCodes)
+		}, localCluster, localEndpoint)
 
 		if err = cableEngine.StartEngine(); err != nil {
 			cleanup.fatal("Error starting the cable engine: %v", err)
@@ -264,7 +270,7 @@ func submarinerClusterFrom(submSpec *types.SubmarinerSpecification) *types.Subma
 		ID: submSpec.ClusterID,
 		Spec: subv1.ClusterSpec{
 			ClusterID:   submSpec.ClusterID,
-			ColorCodes:  submSpec.ColorCodes,
+			ColorCodes:  []string{"blue"}, // This is a fake value, used only for upgrade purposes
 			ServiceCIDR: submSpec.ServiceCidr,
 			ClusterCIDR: submSpec.ClusterCidr,
 			GlobalCIDR:  submSpec.GlobalCidr,
