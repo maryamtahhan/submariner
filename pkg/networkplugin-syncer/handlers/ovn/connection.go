@@ -31,7 +31,6 @@ import (
 	"github.com/ovn-org/libovsdb/model"
 	"github.com/ovn-org/ovn-kubernetes/go-controller/pkg/nbdb"
 	"github.com/ovn-org/ovn-kubernetes/go-controller/pkg/sbdb"
-
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner/pkg/util/clusterfiles"
 	"k8s.io/klog"
@@ -144,6 +143,25 @@ func createLibovsdbClient(dbAddress string, tlsConfig *tls.Config, dbModel model
 	err = client.Connect(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	if dbModel.Name() == "OVN_Northbound" {
+		_, err = client.MonitorAll(ctx)
+		if err != nil {
+			client.Close()
+			return nil, err
+		}
+	} else {
+		// Only Monitor Required SBDB tables to reduce memory overhead
+		_, err = client.Monitor(ctx,
+			client.NewMonitor(
+				libovsdbclient.WithTable(&sbdb.Chassis{}),
+			),
+		)
+		if err != nil {
+			client.Close()
+			return nil, err
+		}
 	}
 
 	return client, nil
