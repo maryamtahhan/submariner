@@ -51,7 +51,7 @@ func (h *ipTunCleanup) TransitionToNonGateway() error {
 	link, err := netlink.LinkByName(iptun.IPTunIface)
 	if err != nil {
 		if !errors.Is(err, netlink.LinkNotFoundError{}) {
-			klog.Warningf("Failed to retrieve the ipTun-tunnel interface during transition to non-gateway: %v", err)
+			klog.Warningf("Failed to retrieve the ipip-tunnel interface during transition to non-gateway: %v", err)
 		}
 
 		return nil

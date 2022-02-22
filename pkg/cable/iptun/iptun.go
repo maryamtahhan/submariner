@@ -90,6 +90,7 @@ func NewDriver(localEndpoint *types.SubmarinerEndpoint, localCluster *types.Subm
 		localCluster:  *localCluster,
 	}
 
+	// Don't create an ipip-tunnel interface till you have the remote endpoint info.
 	return &ipip, nil
 }
 
@@ -256,8 +257,6 @@ func (ipip *iptun) ConnectToEndpoint(endpointInfo *natdiscovery.NATEndpointInfo)
 			allowedIPs, remoteIPTunIP, ipip.ipTunIface.iptunIP, err)
 	}
 
-	klog.Infof("ADDED ROUTES for allowedIPs %q", allowedIPs)
-
 	ipip.connections = append(ipip.connections, v1.Connection{
 		Endpoint: remoteEndpoint.Spec, Status: v1.Connected,
 		UsingIP: endpointInfo.UseIP, UsingNAT: endpointInfo.UseNAT,
@@ -270,7 +269,7 @@ func (ipip *iptun) ConnectToEndpoint(endpointInfo *natdiscovery.NATEndpointInfo)
 
 func (ipip *iptun) DisconnectFromEndpoint(remoteEndpoint *types.SubmarinerEndpoint) error {
 	// We'll panic if remoteEndpoint is nil, this is intentional
-	klog.V(log.DEBUG).Infof("Removing endpoint %#ipip", remoteEndpoint)
+	klog.V(log.DEBUG).Infof("Removing endpoint %#v", remoteEndpoint)
 
 	if ipip.localEndpoint.Spec.ClusterID == remoteEndpoint.Spec.ClusterID {
 		klog.V(log.DEBUG).Infof("Will not disconnect self")
@@ -345,7 +344,7 @@ func (ipip *ipTunIface) AddRoute(ipAddressList []net.IPNet, gwIP, ip net.IP) err
 			return errors.Wrapf(err, "unable to add the route entry %v", route)
 		}
 
-		klog.V(log.DEBUG).Infof("Successfully added the route entry %v and gw ip %ipip", route, gwIP)
+		klog.V(log.DEBUG).Infof("Successfully added the route entry %v and gw ip %v", route, gwIP)
 	}
 
 	return nil
@@ -365,10 +364,10 @@ func (ipip *ipTunIface) DelRoute(ipAddressList []net.IPNet) error {
 
 		err := netlink.RouteDel(route)
 		if err != nil {
-			return errors.Wrapf(err, "unable to add the route entry %ipip", route)
+			return errors.Wrapf(err, "unable to add the route entry %v", route)
 		}
 
-		klog.V(log.DEBUG).Infof("Successfully deleted the route entry %ipip", route)
+		klog.V(log.DEBUG).Infof("Successfully deleted the route entry %v", route)
 	}
 
 	return nil
