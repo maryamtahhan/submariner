@@ -141,7 +141,7 @@ func ConfigureIPAddress(ipAddress net.IP, mask net.IPMask, link netlink.Link, if
 	return nil
 }
 
-func IsIptunConfigTheSame(newLink, currentLink netlink.Link) bool {
+func IsIfaceConfigTheSame(newLink, currentLink netlink.Link) bool {
 	required := newLink.(*netlink.Iptun)
 	existing := currentLink.(*netlink.Iptun)
 

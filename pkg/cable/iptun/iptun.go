@@ -173,7 +173,7 @@ func createIPTunIface(iface *ipTunIface) error {
 			return errors.Wrap(err, "failed to retrieve link info")
 		}
 
-		if cableutils.IsIptunConfigTheSame(iface.link, existing) {
+		if cableutils.IsIfaceConfigTheSame(iface.link, existing) {
 			klog.V(log.DEBUG).Infof("iptun interface already exists with same configuration.")
 			klog.Errorf("iptun interface already exists with same configuration.")
 			iface.link = existing.(*netlink.Iptun)
@@ -200,7 +200,7 @@ func createIPTunIface(iface *ipTunIface) error {
 
 func (ipip *iptun) addIPRule() error {
 	if ipip.ipTunIface != nil {
-		cableutils.AddIPRule(TableID)
+		return cableutils.AddIPRule(TableID)
 	}
 
 	return nil
@@ -300,7 +300,7 @@ func (ipip *iptun) DisconnectFromEndpoint(remoteEndpoint *types.SubmarinerEndpoi
 
 	allowedIPs := cableutils.ParseSubnets(remoteEndpoint.Spec.Subnets)
 
-	err := ipip.ipTunIface.DelRoute(allowedIPs)
+	err := cableutils.DelRoute(allowedIPs, ipip.ipTunIface.link.Index, TableID)
 
 	if err != nil {
 		return fmt.Errorf("failed to remove route for the CIDR %q: %w", allowedIPs, err)
@@ -320,57 +320,6 @@ func (ipip *iptun) GetConnections() ([]v1.Connection, error) {
 
 func (ipip *iptun) GetActiveConnections() ([]v1.Connection, error) {
 	return ipip.connections, nil
-}
-
-func (ipip *ipTunIface) AddRoute(ipAddressList []net.IPNet, gwIP, ip net.IP) error {
-	for i := range ipAddressList {
-		route := &netlink.Route{
-			LinkIndex: ipip.link.Index,
-			Src:       ip,
-			Dst:       &ipAddressList[i],
-			Gw:        gwIP,
-			Type:      netlink.NDA_DST,
-			Flags:     netlink.NTF_SELF,
-			Priority:  100,
-			Table:     TableID,
-		}
-		err := netlink.RouteAdd(route)
-
-		if errors.Is(err, syscall.EEXIST) {
-			err = netlink.RouteReplace(route)
-		}
-
-		if err != nil {
-			return errors.Wrapf(err, "unable to add the route entry %v", route)
-		}
-
-		klog.V(log.DEBUG).Infof("Successfully added the route entry %v and gw ip %v", route, gwIP)
-	}
-
-	return nil
-}
-
-func (ipip *ipTunIface) DelRoute(ipAddressList []net.IPNet) error {
-	for i := range ipAddressList {
-		route := &netlink.Route{
-			LinkIndex: ipip.link.Index,
-			Dst:       &ipAddressList[i],
-			Gw:        nil,
-			Type:      netlink.NDA_DST,
-			Flags:     netlink.NTF_SELF,
-			Priority:  100,
-			Table:     TableID,
-		}
-
-		err := netlink.RouteDel(route)
-		if err != nil {
-			return errors.Wrapf(err, "unable to add the route entry %v", route)
-		}
-
-		klog.V(log.DEBUG).Infof("Successfully deleted the route entry %v", route)
-	}
-
-	return nil
 }
 
 func (ipip *iptun) Init() error {
