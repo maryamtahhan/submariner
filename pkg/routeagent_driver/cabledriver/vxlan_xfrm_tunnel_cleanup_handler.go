@@ -19,30 +19,41 @@ limitations under the License.
 package cabledriver
 
 import (
+	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner/pkg/cable/cableutils"
 	"github.com/submariner-io/submariner/pkg/event"
 	"github.com/submariner-io/submariner/pkg/netlink"
 	"k8s.io/klog"
 )
 
-type vxlanCleanup struct {
+type vxlanXFRMCleanup struct {
 	event.HandlerBase
 }
 
-func NewVXLANCleanup() event.Handler {
-	return &vxlanCleanup{}
+func NewVXLANXFRMCleanup() event.Handler {
+	return &vxlanXFRMCleanup{}
 }
 
-func (h *vxlanCleanup) GetNetworkPlugins() []string {
+func (h *vxlanXFRMCleanup) GetNetworkPlugins() []string {
 	return []string{event.AnyNetworkPlugin}
 }
 
-func (h *vxlanCleanup) GetName() string {
+func (h *vxlanXFRMCleanup) GetName() string {
 	return "VXLAN cleanup handler"
 }
 
-func (h *vxlanCleanup) TransitionToNonGateway() error {
-	klog.Infof("Cleaning up the routes")
+func (h *vxlanXFRMCleanup) TransitionToNonGateway() error {
+	var err error
 
-	return netlink.DeleteIfaceAndAssociatedRoutes(cableutils.VxlanIfaceName, cableutils.TableID) // nolint:wrapcheck  // No need to wrap this error
+	klog.Infof("Cleaning up")
+
+	if err = netlink.DeleteXfrmRules(); err != nil {
+		return errors.Wrap(err, "failed to DeleteXfrmRules")
+	}
+
+	if err = netlink.DeleteIfaceAndAssociatedRoutes(cableutils.VxlanIfaceName, cableutils.TableID); err != nil {
+		return errors.Wrap(err, "failed to DeleteIfaceAndAssociatedRoutes")
+	}
+
+	return nil
 }
