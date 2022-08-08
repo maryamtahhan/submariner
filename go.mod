@@ -12,14 +12,14 @@ require (
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.18.1
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.12.1
+	github.com/prometheus/client_golang v1.13.0
 	github.com/submariner-io/admiral v0.12.0-m3
 	github.com/submariner-io/shipyard v0.12.0-m3
 	github.com/uw-labs/lichen v0.1.4
 	github.com/vishvananda/netlink v1.1.0
-	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9
+	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a
 	golang.zx2c4.com/wireguard/wgctrl v0.0.0-20211215182854-7a385b3431de
-	google.golang.org/protobuf v1.27.1
+	google.golang.org/protobuf v1.28.1
 	k8s.io/api v0.21.0
 	k8s.io/apimachinery v0.21.0
 	k8s.io/client-go v1.5.2
